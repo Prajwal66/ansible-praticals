@@ -1,0 +1,37 @@
+---
+- hosts: all
+  become: true
+  # gather_facts: false --  it will skip gather facts 
+
+  tasks:
+    - name: Make sure packages openssh  & openssl are up to date
+      ansible.builtin.yum:
+        name: "{{ item }}"
+        state: latest
+
+      loop:
+        - openssh
+        - openssl
+      ignore_errors: yes
+    - name: Verify docker is installed or not
+      ansible.builtin.command: docker --version
+      register: output #store the output of above command
+      ignore_errors: yes
+
+    - ansible.builtin.debug:
+        var: output #print the output
+
+    - name: Install docker
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /tmp/docer-ce.repo
+      changed_when: false
+      delegate_to: localhost
+      run_once: true
+
+    - name: Copy the repo file to target(s)
+      ansible.builtin.copy:
+        src: /tmp/docer-ce.repo
+        dest: /etc/yum.repos.d/docer-ce.repo
+      become: yes
+  
