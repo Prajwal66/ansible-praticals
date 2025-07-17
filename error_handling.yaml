@@ -1,0 +1,40 @@
+---
+- hosts: localhost
+  connection: local
+  
+  tasks:
+  - name: Install security updates
+    ansible.builtin.apt:
+      name: "{{item}}"
+      state: latest
+    loop:
+      - openssl
+      - openssh
+    ignore_errors: yes
+  - name: check docker is installed or not
+    ansible.builtin.command: docker --version
+    register: output    
+    ignore_errors: yes
+    register: output
+  - ansible.builtin.debug:
+      var: output
+  - name: install docker.io
+    ansible.builtin.apt:
+      name: docker.io
+      state: present
+    when:
+      output.failed == true
+
+  
+  - name: install git if not installed
+    ansible.builtin.command: git --version
+    register: git_status
+    ignore_errors: yes
+  - ansible.builtin.debug:
+      var: git_status
+  - name: install git
+    ansible.builtin.apt:
+      name: git
+      state: present
+    when:
+      git_status.failed == true    
